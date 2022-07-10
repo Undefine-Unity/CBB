@@ -1,5 +1,5 @@
 package pl.undefine.cbb.ast;
 
-public class Expression
+public class Expression extends Statement
 {
 }

@@ -40,16 +40,21 @@ public class Compiler
 
         output.append("{\n");
 
-        for (Expression expression : block.expressions)
+        for (Statement statement : block.statements)
         {
             output.append("\t");
-            output.append(translate_expression(expression));
+            output.append(translate_statement(statement));
             output.append(";\n");
         }
 
         output.append("}\n");
 
         return output.toString();
+    }
+
+    String translate_statement(Statement statement)
+    {
+        return translate_expression((Expression) statement);
     }
 
     String translate_expression(Expression expression)

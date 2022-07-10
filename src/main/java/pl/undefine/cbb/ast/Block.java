@@ -5,10 +5,10 @@ import java.util.List;
 
 public class Block
 {
-    public List<Expression> expressions;
+    public List<Statement> statements;
 
     public Block()
     {
-        expressions = new ArrayList<>();
+        statements = new ArrayList<>();
     }
 }

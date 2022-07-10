@@ -98,13 +98,21 @@ public class Parser
             }
             else
             {
-                ErrorOr<Expression> expression = parse_expression();
-                if(expression.is_error())
-                    return expression.rethrow();
-                block.expressions.add(expression.get_value());
+                ErrorOr<Statement> statement = parse_statement();
+                if(statement.is_error())
+                    return statement.rethrow();
+                block.statements.add(statement.get_value());
             }
         }
         return new ErrorOr<>(new Error("incomplete block", tokens.get(index - 1).span));
+    }
+
+    ErrorOr<Statement> parse_statement()
+    {
+        ErrorOr<Expression> expression = parse_expression();
+        if(expression.is_error())
+            return expression.rethrow();
+        return new ErrorOr<>(expression.get_value());
     }
 
     ErrorOr<Expression> parse_expression()
