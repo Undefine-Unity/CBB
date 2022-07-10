@@ -13,7 +13,7 @@ public class Compiler
     {
         StringBuilder output = new StringBuilder();
 
-        output.append("#include <stdio.h>\n");
+        output.append("#include \"runtime/lib.h\"\n");
         output.append("\n");
 
         for (Function function : parsed_file.functions)
