@@ -123,7 +123,7 @@ public class Lexer
             int start = index;
             index++;
 
-            while (index < file_content.length && (Character.isAlphabetic(file_content[index]) || Character.isDigit(file_content[index])))
+            while (index < file_content.length && (Character.isAlphabetic(file_content[index]) || Character.isDigit(file_content[index]) || file_content[index] == '_'))
             {
                 index++;
             }
