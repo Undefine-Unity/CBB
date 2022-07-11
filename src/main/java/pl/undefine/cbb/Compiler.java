@@ -31,10 +31,10 @@ public class Compiler
                 " " +
                 function.name +
                 "()\n" +
-                translate_block(function.block);
+                compile_block(function.block);
     }
 
-    String translate_block(Block block)
+    String compile_block(Block block)
     {
         StringBuilder output = new StringBuilder();
 
@@ -43,7 +43,7 @@ public class Compiler
         for (Statement statement : block.statements)
         {
             output.append("\t");
-            output.append(translate_statement(statement));
+            output.append(compile_statement(statement));
             output.append(";\n");
         }
 
@@ -52,12 +52,12 @@ public class Compiler
         return output.toString();
     }
 
-    String translate_statement(Statement statement)
+    String compile_statement(Statement statement)
     {
-        return translate_expression((Expression) statement);
+        return compile_expression((Expression) statement);
     }
 
-    String translate_expression(Expression expression)
+    String compile_expression(Expression expression)
     {
         StringBuilder output = new StringBuilder();
 
@@ -76,7 +76,7 @@ public class Compiler
 
             for (Expression param : call.params)
             {
-                output.append(translate_expression(param));
+                output.append(compile_expression(param));
             }
 
             output.append(')');

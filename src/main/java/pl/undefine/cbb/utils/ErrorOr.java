@@ -24,19 +24,34 @@ public class ErrorOr<T>
 
     public T get_value()
     {
-        assert !is_error();
+        if(is_error())
+        {
+            assert false;
+            System.out.println("internal error");
+            System.exit(2);
+        }
         return value;
     }
 
     public Error get_error()
     {
-        assert is_error();
+        if(!is_error())
+        {
+            assert false;
+            System.out.println("internal error");
+            System.exit(2);
+        }
         return error;
     }
 
     public <T> ErrorOr<T> rethrow()
     {
-        assert is_error();
+        if(!is_error())
+        {
+            assert false;
+            System.out.println("internal error");
+            System.exit(2);
+        }
         return new ErrorOr<>(error);
     }
 }

@@ -51,13 +51,29 @@ public class Lexer
                 tokens.add(new Token(Token.TokenType.Semicolon, new Span(file_id, index, index + 1)));
                 index++;
             }
+            else if (file_content[index] == ',')
+            {
+                tokens.add(new Token(Token.TokenType.Comma, new Span(file_id, index, index + 1)));
+                index++;
+            }
             else
             {
-                tokens.add(lex_item().get_value());
+                ErrorOr<Token> token = lex_item();
+                if(token.is_error())
+                    return token.rethrow();
+                tokens.add(token.get_value());
             }
         }
         tokens.add(new Token(Token.TokenType.Eof, new Span(file_id, index, index)));
         return new ErrorOr<>(tokens);
+    }
+
+    public static void dump_tokens(List<Token> tokens)
+    {
+        for(Token token : tokens)
+        {
+            System.out.printf("<Token type=\"%s\" value=\"%s\" span={file_id=\"%d\" start=\"%d\" end=\"%d\"}>\n", token.type, token.value != null ? token.value : "", token.span.file_id, token.span.start, token.span.end);
+        }
     }
 
     void skip_whitespace()

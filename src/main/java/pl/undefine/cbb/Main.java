@@ -20,7 +20,9 @@ public class Main
     {
         for(String file_path : args)
         {
-            byte[] file = Files.readAllBytes(Path.of(file_path));
+            Path path = Path.of(file_path);
+
+            byte[] file = Files.readAllBytes(path);
 
             files.put(next_file_id++, file);
             int file_id = files.size() - 1;
@@ -29,6 +31,7 @@ public class Main
             ErrorOr<List<Token>> tokens = lexer.lex_file();
             if(tokens.is_error())
                 display_error(tokens.get_error());
+            Lexer.dump_tokens(tokens.get_value());
 
             Parser parser = new Parser(file_id, tokens.get_value());
             ErrorOr<ParsedFile> parsedFile = parser.parse_file();
@@ -37,7 +40,7 @@ public class Main
 
             Compiler compiler = new Compiler(parsedFile.get_value());
             String cpp_code = compiler.compile();
-            Files.write(Path.of(Path.of(file_path).getFileName() + ".cpp"), cpp_code.getBytes());
+            Files.write(Path.of(path.getFileName() + ".cpp"), cpp_code.getBytes());
 
         }
     }

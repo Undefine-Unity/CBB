@@ -12,6 +12,7 @@ public class Token
         LCurly,
         RCurly,
         Semicolon,
+        Comma,
         Eof,
     };
 

@@ -1,6 +1,7 @@
 package pl.undefine.cbb;
 
 import pl.undefine.cbb.ast.*;
+import pl.undefine.cbb.ast.Number;
 import pl.undefine.cbb.utils.Error;
 import pl.undefine.cbb.utils.ErrorOr;
 
@@ -28,7 +29,7 @@ public class Parser
         {
             if (tokens.get(index).type == Token.TokenType.Name)
             {
-                if (tokens.get(index).value.equals("int"))
+                if (tokens.get(index).value.equals("int") || tokens.get(index).value.equals("void"))
                 {
                     ErrorOr<Function> function = parse_function();
                     if(function.is_error())
@@ -37,7 +38,7 @@ public class Parser
                 }
                 else
                 {
-                    new ErrorOr<>(new Error("unexpected token", tokens.get(index).span));
+                    return new ErrorOr<>(new Error("unexpected token", tokens.get(index).span));
                 }
             }
             else if (tokens.get(index).type == Token.TokenType.Eof)
@@ -46,7 +47,7 @@ public class Parser
             }
             else
             {
-                new ErrorOr<>(new Error("unexpected token", tokens.get(index).span));
+                return new ErrorOr<>(new Error("unexpected token", tokens.get(index).span));
             }
         }
 
@@ -124,9 +125,17 @@ public class Parser
                 return call.rethrow();
             return new ErrorOr<>(call.get_value());
         }
+        else if(tokens.get(index).type == Token.TokenType.String)
+        {
+            return new ErrorOr<>(new StringLiteral(tokens.get(index).value));
+        }
+        else if(tokens.get(index).type == Token.TokenType.Number)
+        {
+            return new ErrorOr<>(new Number(Long.parseLong(tokens.get(index).value)));
+        }
         else
         {
-            return new ErrorOr<>(new Error("invalid or unsupported expresion", tokens.get(index).span));
+            return new ErrorOr<>(new Error("invalid or unsupported expression", tokens.get(index).span));
         }
     }
 
@@ -135,35 +144,33 @@ public class Parser
         Call call = new Call();
         if(tokens.get(index).type == Token.TokenType.Name)
         {
-            if(tokens.get(index).value.equals("print"))
+            call.name = tokens.get(index).value;
+            index++;
+            if(index >= tokens.size() || tokens.get(index).type != Token.TokenType.LParen)
             {
-                call.name = "print";
                 index++;
-                if(index >= tokens.size() || tokens.get(index).type != Token.TokenType.LParen)
+                return new ErrorOr<>(new Error("expected '('", tokens.get(index).span));
+            }
+            index++;
+            while(index < tokens.size())
+            {
+                if(tokens.get(index).type == Token.TokenType.RParen)
                 {
-                    return new ErrorOr<>(new Error("expected '('", tokens.get(index).span));
-                }
-                index++;
-                if(index < tokens.size() && tokens.get(index).type == Token.TokenType.String)
-                {
-                    call.params.add(new StringLiteral(tokens.get(index).value));
-                    index++;
-                    if(index >= tokens.size() || tokens.get(index).type != Token.TokenType.RParen)
-                    {
-                        return new ErrorOr<>(new Error("expected ')'", tokens.get(index).span));
-                    }
                     index++;
                     return new ErrorOr<>(call);
                 }
-                else
+                else if(tokens.get(index).type == Token.TokenType.String)
                 {
-                    return new ErrorOr<>(new Error("incomplete function call", tokens.get(index).span));
+                    call.params.add(new StringLiteral(tokens.get(index).value));
+                    index++;
+                }
+                else if(tokens.get(index).type == Token.TokenType.Number)
+                {
+                    call.params.add(new Number(Long.parseLong(tokens.get(index).value)));
+                    index++;
                 }
             }
-            else
-            {
-                return new ErrorOr<>(new Error("unknown function", tokens.get(index).span));
-            }
+            return new ErrorOr<>(new Error("expected ')'", tokens.get(index - 1).span));
         }
         else
         {
