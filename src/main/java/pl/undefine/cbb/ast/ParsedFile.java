@@ -6,11 +6,11 @@ import java.util.List;
 public class ParsedFile
 {
     public int file_id;
-    public List<Function> functions;
+    public List<Declaration> declarations;
 
     public ParsedFile(int file_id)
     {
         this.file_id = file_id;
-        this.functions = new ArrayList<>();
+        this.declarations = new ArrayList<>();
     }
 }

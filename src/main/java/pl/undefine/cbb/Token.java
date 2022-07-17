@@ -2,23 +2,9 @@ package pl.undefine.cbb;
 
 public class Token
 {
-    enum TokenType
-    {
-        Number,
-        String,
-        Name,
-        LParen,
-        RParen,
-        LCurly,
-        RCurly,
-        Semicolon,
-        Comma,
-        Eof,
-    };
-
-    TokenType type;
-    Span span;
-    String value;
+    public TokenType type;
+    public Span span;
+    public String value;
 
     public Token(TokenType type, Span span)
     {

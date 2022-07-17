@@ -1,0 +1,8 @@
+string message_global = "Hello!\n"
+
+int32 main()
+{
+    string message_local = "Hi!\n"
+    print(message_global)
+    print(message_local)
+}

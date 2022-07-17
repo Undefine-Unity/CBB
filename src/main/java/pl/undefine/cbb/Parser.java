@@ -1,13 +1,10 @@
 package pl.undefine.cbb;
 
-import pl.undefine.cbb.ast.*;
 import pl.undefine.cbb.ast.Number;
-import pl.undefine.cbb.utils.Error;
-import pl.undefine.cbb.utils.ErrorOr;
+import pl.undefine.cbb.ast.*;
+import pl.undefine.cbb.utils.ParserException;
 
 import java.util.List;
-
-import static pl.undefine.cbb.Token.TokenType.Semicolon;
 
 public class Parser
 {
@@ -21,160 +18,211 @@ public class Parser
         this.tokens = tokens;
     }
 
-    ErrorOr<ParsedFile> parse_file()
+    ParsedFile parse_file() throws ParserException
     {
         ParsedFile parsed_file = new ParsedFile(file_id);
 
         while (index < tokens.size())
         {
-            if (tokens.get(index).type == Token.TokenType.Name)
+            if (tokens.get(index).type == TokenType.Name)
             {
-                if (tokens.get(index).value.equals("int") || tokens.get(index).value.equals("void"))
+                if (Type.is_type(tokens.get(index)))
                 {
-                    ErrorOr<Function> function = parse_function();
-                    if(function.is_error())
-                        return function.rethrow();
-                    parsed_file.functions.add(function.get_value());
+                    parsed_file.declarations.add(parse_declaration());
                 }
                 else
                 {
-                    return new ErrorOr<>(new Error("unexpected token", tokens.get(index).span));
+                    throw new ParserException("unexpected token", tokens.get(index).span);
                 }
             }
-            else if (tokens.get(index).type == Token.TokenType.Eof)
+            else if (tokens.get(index).type == TokenType.Eof)
             {
+                // We have reached the end of the file
                 break;
             }
             else
             {
-                return new ErrorOr<>(new Error("unexpected token", tokens.get(index).span));
+                throw new ParserException("unexpected token", tokens.get(index).span);
             }
         }
 
-        return new ErrorOr<>(parsed_file);
+        return parsed_file;
     }
 
-    ErrorOr<Function> parse_function()
+    Declaration parse_declaration() throws ParserException
     {
-        Function function = new Function();
+        index++; // Skip the type for now
         if (index < tokens.size())
         {
-            function.return_type = tokens.get(index).value;
-            index++;
-            if (tokens.get(index).type == Token.TokenType.Name)
+            if (tokens.get(index).type == TokenType.Name)
             {
-                function.name = tokens.get(index).value;
-                index += 3;
-                ErrorOr<Block> block = parse_block();
-                if(block.is_error())
-                    return block.rethrow();
-                function.block = block.get_value();
+                boolean function; // True - function, False - variable
+                function = tokens.get(index + 1).type == TokenType.LParen; // If the next token is a `(` this is a function declaration
+                index--; // Go back to the type
+                if (function)
+                    return parse_function();
+                else
+                    return parse_variable();
             }
             else
             {
-                return new ErrorOr<>(new Error("expected function name", tokens.get(index).span));
+                throw new ParserException("expected name", tokens.get(index).span);
             }
         }
         else
         {
-            return new ErrorOr<>(new Error("incomplete function definition", tokens.get(index - 1).span));
+            throw new ParserException("incomplete declaration", tokens.get(index - 1).span);
         }
-        return new ErrorOr<>(function);
     }
 
-    ErrorOr<Block> parse_block()
+    Function parse_function() throws ParserException
+    {
+        Function function = new Function();
+        // We do not do any checks because everything is checked in `parse_declaration`
+        function.return_type = Type.get_type(get_value_and_advance());
+        function.name = get_value_and_advance();
+        // Skip parentheses for now
+        expect(TokenType.LParen);
+        expect(TokenType.RParen);
+        function.block = parse_block();
+        return function;
+    }
+
+    Variable parse_variable() throws ParserException
+    {
+        Variable variable = new Variable();
+        // We do not do any checks because everything is checked in `parse_declaration`
+        variable.type = Type.get_type(get_value_and_advance());
+        variable.name = get_value_and_advance();
+        // This variable is assigned during declaration
+        if(tokens.get(index).type == TokenType.Equals)
+        {
+            index++;
+            variable.asignment = parse_expression();
+        }
+        return variable;
+    }
+
+    Block parse_block() throws ParserException
     {
         Block block = new Block();
-        index++;
+        expect(TokenType.LCurly);
         while (index < tokens.size())
         {
-            if(tokens.get(index).type == Token.TokenType.RCurly)
+            if (tokens.get(index).type == TokenType.RCurly)
             {
                 index++;
-                return new ErrorOr<>(block);
+                return block;
             }
-            else if(tokens.get(index).type == Semicolon)
+            else if (tokens.get(index).type == TokenType.Semicolon)
             {
+                // Semicolons are not required, but they're not a mistake either, so we just ignore them
                 index++;
             }
             else
             {
-                ErrorOr<Statement> statement = parse_statement();
-                if(statement.is_error())
-                    return statement.rethrow();
-                block.statements.add(statement.get_value());
+                block.statements.add(parse_statement());
             }
         }
-        return new ErrorOr<>(new Error("incomplete block", tokens.get(index - 1).span));
+        throw new ParserException("incomplete block", tokens.get(index - 1).span);
     }
 
-    ErrorOr<Statement> parse_statement()
+    Statement parse_statement() throws ParserException
     {
-        ErrorOr<Expression> expression = parse_expression();
-        if(expression.is_error())
-            return expression.rethrow();
-        return new ErrorOr<>(expression.get_value());
+        if(Type.is_type(tokens.get(index)))
+            return parse_declaration();
+        else
+            return parse_expression();
     }
 
-    ErrorOr<Expression> parse_expression()
+    Expression parse_expression() throws ParserException
     {
-        if(tokens.get(index).type == Token.TokenType.Name)
+        if (tokens.get(index).type == TokenType.Name)
         {
-            ErrorOr<Call> call = parse_call();
-            if(call.is_error())
-                return call.rethrow();
-            return new ErrorOr<>(call.get_value());
+            if(tokens.get(index+1).type == TokenType.LParen)
+            {
+                // Next token is a `(`, so this is a function call
+                return parse_call();
+            }
+            else
+            {
+                // Otherwise we are referencing a variable
+                // Let's assume that this is a variable name before we have a typechecker
+                return new VariableValue(get_value_and_advance());
+            }
         }
-        else if(tokens.get(index).type == Token.TokenType.String)
+        else if (tokens.get(index).type == TokenType.String)
         {
-            return new ErrorOr<>(new StringLiteral(tokens.get(index).value));
+            return new StringLiteral(get_value_and_advance());
         }
-        else if(tokens.get(index).type == Token.TokenType.Number)
+        else if (tokens.get(index).type == TokenType.Number)
         {
-            return new ErrorOr<>(new Number(Long.parseLong(tokens.get(index).value)));
+            return new Number(Long.parseLong(get_value_and_advance()));
         }
         else
         {
-            return new ErrorOr<>(new Error("invalid or unsupported expression", tokens.get(index).span));
+            throw new ParserException("invalid or unsupported expression", tokens.get(index).span);
         }
     }
 
-    ErrorOr<Call> parse_call()
+    Call parse_call() throws ParserException
     {
         Call call = new Call();
-        if(tokens.get(index).type == Token.TokenType.Name)
+        if (tokens.get(index).type == TokenType.Name)
         {
             call.name = tokens.get(index).value;
             index++;
-            if(index >= tokens.size() || tokens.get(index).type != Token.TokenType.LParen)
+            if (index >= tokens.size() || tokens.get(index).type != TokenType.LParen)
             {
                 index++;
-                return new ErrorOr<>(new Error("expected '('", tokens.get(index).span));
+                throw new ParserException("expected '('", tokens.get(index).span);
             }
             index++;
-            while(index < tokens.size())
+            while (index < tokens.size())
             {
-                if(tokens.get(index).type == Token.TokenType.RParen)
+                if (tokens.get(index).type == TokenType.RParen)
                 {
                     index++;
-                    return new ErrorOr<>(call);
+                    return call;
                 }
-                else if(tokens.get(index).type == Token.TokenType.String)
+                else if (tokens.get(index).type == TokenType.String)
                 {
-                    call.params.add(new StringLiteral(tokens.get(index).value));
-                    index++;
+                    call.params.add(new StringLiteral(get_value_and_advance()));
                 }
-                else if(tokens.get(index).type == Token.TokenType.Number)
+                else if (tokens.get(index).type == TokenType.Number)
                 {
-                    call.params.add(new Number(Long.parseLong(tokens.get(index).value)));
-                    index++;
+                    call.params.add(new Number(Long.parseLong(get_value_and_advance())));
+                }
+                else if (tokens.get(index).type == TokenType.Name)
+                {
+                    // Let's assume that this is a variable name before we have a typechecker
+                    call.params.add(new VariableValue(get_value_and_advance()));
+                }
+                else
+                {
+                    throw new ParserException("unexpected token", tokens.get(index).span);
                 }
             }
-            return new ErrorOr<>(new Error("expected ')'", tokens.get(index - 1).span));
+            throw new ParserException("expected ')'", tokens.get(index - 1).span);
         }
         else
         {
-            return new ErrorOr<>(new Error("expected function call", tokens.get(index).span));
+            throw new ParserException("expected function call", tokens.get(index).span);
         }
+    }
+
+    public String get_value_and_advance()
+    {
+        index++;
+        return tokens.get(index - 1).value;
+    }
+
+    public void expect(TokenType token_type) throws ParserException
+    {
+        if (tokens.get(index).type != token_type)
+        {
+            throw new ParserException("expected `" + token_type.name() + "`", tokens.get(index).span);
+        }
+        index++;
     }
 }

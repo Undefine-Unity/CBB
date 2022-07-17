@@ -1,6 +1,7 @@
 package pl.undefine.cbb;
 
 import pl.undefine.cbb.ast.*;
+import pl.undefine.cbb.ast.Number;
 
 public class Compiler
 {
@@ -16,22 +17,48 @@ public class Compiler
         output.append("#include \"runtime/lib.h\"\n");
         output.append("\n");
 
-        for (Function function : parsed_file.functions)
+        for (Declaration declaration : parsed_file.declarations)
         {
-            output.append(compile_function(function));
+            output.append(compile_declaration(declaration));
             output.append("\n");
         }
 
         return output.toString();
     }
 
+    String compile_declaration(Declaration declaration)
+    {
+        if (declaration instanceof Function function)
+            return compile_function(function);
+        else if (declaration instanceof Variable variable)
+            return compile_variable(variable);
+        else
+        {
+            if(Main.is_debug())
+                assert false;
+            else
+                System.out.println("Internal error");
+            System.exit(2);
+            return "";
+        }
+    }
+
     String compile_function(Function function)
     {
-        return function.return_type +
+        return function.return_type.cpp_name +
                 " " +
                 function.name +
                 "()\n" +
                 compile_block(function.block);
+    }
+
+    String compile_variable(Variable variable)
+    {
+        return variable.type.cpp_name +
+                " " +
+                variable.name +
+                (variable.asignment != null ? " = " + compile_expression(variable.asignment) : "") +
+                ";\n";
     }
 
     String compile_block(Block block)
@@ -54,7 +81,19 @@ public class Compiler
 
     String compile_statement(Statement statement)
     {
-        return compile_expression((Expression) statement);
+        if(statement instanceof Declaration declaration)
+            return compile_declaration(declaration);
+        else if(statement instanceof Expression expression)
+            return compile_expression(expression);
+        else
+        {
+            if(Main.is_debug())
+                assert false;
+            else
+                System.out.println("Internal error");
+            System.exit(2);
+            return "";
+        }
     }
 
     String compile_expression(Expression expression)
@@ -81,11 +120,19 @@ public class Compiler
 
             output.append(')');
         }
-        else if(expression instanceof StringLiteral string)
+        else if (expression instanceof StringLiteral string)
         {
             output.append("\"");
             output.append(string.value);
             output.append("\"");
+        }
+        else if (expression instanceof Number number)
+        {
+            output.append(number.number);
+        }
+        else if (expression instanceof VariableValue variable_value)
+        {
+            output.append(variable_value.variable_name);
         }
 
         return output.toString();

@@ -1,7 +1,6 @@
 package pl.undefine.cbb;
 
-import pl.undefine.cbb.utils.Error;
-import pl.undefine.cbb.utils.ErrorOr;
+import pl.undefine.cbb.utils.LexerException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +18,7 @@ public class Lexer
         this.file_content = file_content;
     }
 
-    ErrorOr<List<Token>> lex_file()
+    List<Token> lex_file() throws LexerException
     {
         List<Token> tokens = new ArrayList<>();
         while (index < file_content.length)
@@ -28,49 +27,51 @@ public class Lexer
 
             if (file_content[index] == '(')
             {
-                tokens.add(new Token(Token.TokenType.LParen, new Span(file_id, index, index + 1)));
+                tokens.add(new Token(TokenType.LParen, new Span(file_id, index, index + 1)));
                 index++;
             }
             else if (file_content[index] == ')')
             {
-                tokens.add(new Token(Token.TokenType.RParen, new Span(file_id, index, index + 1)));
+                tokens.add(new Token(TokenType.RParen, new Span(file_id, index, index + 1)));
                 index++;
             }
             else if (file_content[index] == '{')
             {
-                tokens.add(new Token(Token.TokenType.LCurly, new Span(file_id, index, index + 1)));
+                tokens.add(new Token(TokenType.LCurly, new Span(file_id, index, index + 1)));
                 index++;
             }
             else if (file_content[index] == '}')
             {
-                tokens.add(new Token(Token.TokenType.RCurly, new Span(file_id, index, index + 1)));
+                tokens.add(new Token(TokenType.RCurly, new Span(file_id, index, index + 1)));
                 index++;
             }
             else if (file_content[index] == ';')
             {
-                tokens.add(new Token(Token.TokenType.Semicolon, new Span(file_id, index, index + 1)));
+                tokens.add(new Token(TokenType.Semicolon, new Span(file_id, index, index + 1)));
                 index++;
             }
             else if (file_content[index] == ',')
             {
-                tokens.add(new Token(Token.TokenType.Comma, new Span(file_id, index, index + 1)));
+                tokens.add(new Token(TokenType.Comma, new Span(file_id, index, index + 1)));
+                index++;
+            }
+            else if (file_content[index] == '=')
+            {
+                tokens.add(new Token(TokenType.Equals, new Span(file_id, index, index + 1)));
                 index++;
             }
             else
             {
-                ErrorOr<Token> token = lex_item();
-                if(token.is_error())
-                    return token.rethrow();
-                tokens.add(token.get_value());
+                tokens.add(lex_item());
             }
         }
-        tokens.add(new Token(Token.TokenType.Eof, new Span(file_id, index, index)));
-        return new ErrorOr<>(tokens);
+        tokens.add(new Token(TokenType.Eof, new Span(file_id, index, index)));
+        return tokens;
     }
 
     public static void dump_tokens(List<Token> tokens)
     {
-        for(Token token : tokens)
+        for (Token token : tokens)
         {
             System.out.printf("<Token type=\"%s\" value=\"%s\" span={file_id=\"%d\" start=\"%d\" end=\"%d\"}>\n", token.type, token.value != null ? token.value : "", token.span.file_id, token.span.start, token.span.end);
         }
@@ -82,7 +83,7 @@ public class Lexer
             index++;
     }
 
-    ErrorOr<Token> lex_item()
+    Token lex_item() throws LexerException
     {
         if (Character.isDigit(file_content[index]))
         {
@@ -94,7 +95,7 @@ public class Lexer
 
             byte[] number = Arrays.copyOfRange(file_content, start, index);
 
-            return new ErrorOr<>(new Token(Token.TokenType.Number, new Span(file_id, start, index), new String(number)));
+            return new Token(TokenType.Number, new Span(file_id, start, index), new String(number));
         }
         else if (file_content[index] == '"')
         {
@@ -110,13 +111,13 @@ public class Lexer
 
             if (index == file_content.length || file_content[index] != '"')
             {
-                return new ErrorOr<>(new Error("expected quote", new Span(file_id, index, index)));
+                throw new LexerException("expected quote", new Span(file_id, index, index));
             }
 
             byte[] string = Arrays.copyOfRange(file_content, start + 1, index);
 
             index++;
-            return new ErrorOr<>(new Token(Token.TokenType.String, new Span(file_id, start, index), new String(string)));
+            return new Token(TokenType.String, new Span(file_id, start, index), new String(string));
         }
         else
         {
@@ -130,7 +131,7 @@ public class Lexer
 
             byte[] name = Arrays.copyOfRange(file_content, start, index);
 
-            return new ErrorOr<>(new Token(Token.TokenType.Name, new Span(file_id, start, index), new String(name)));
+            return new Token(TokenType.Name, new Span(file_id, start, index), new String(name));
         }
     }
 }

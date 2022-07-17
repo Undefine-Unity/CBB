@@ -1,8 +1,8 @@
 package pl.undefine.cbb.ast;
 
-public class Function
+public class Function extends Declaration
 {
     public String name;
-    public String return_type;
+    public Type return_type;
     public Block block;
 }

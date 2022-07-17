@@ -1,8 +1,8 @@
 package pl.undefine.cbb;
 
 import pl.undefine.cbb.ast.ParsedFile;
-import pl.undefine.cbb.utils.ErrorOr;
-import pl.undefine.cbb.utils.Error;
+import pl.undefine.cbb.utils.LexerException;
+import pl.undefine.cbb.utils.ParserException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,66 +16,103 @@ public class Main
     public static final Map<Integer, byte[]> files = new HashMap<>();
     public static int next_file_id = 0;
 
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args)
     {
-        for(String file_path : args)
+        try
         {
-            Path path = Path.of(file_path);
-
-            byte[] file = Files.readAllBytes(path);
-
-            files.put(next_file_id++, file);
-            int file_id = files.size() - 1;
-
-            Lexer lexer = new Lexer(file_id, file);
-            ErrorOr<List<Token>> tokens = lexer.lex_file();
-            if(tokens.is_error())
-                display_error(tokens.get_error());
-            Lexer.dump_tokens(tokens.get_value());
-
-            Parser parser = new Parser(file_id, tokens.get_value());
-            ErrorOr<ParsedFile> parsedFile = parser.parse_file();
-            if(parsedFile.is_error())
-                display_error(parsedFile.get_error());
-
-            Compiler compiler = new Compiler(parsedFile.get_value());
-            String cpp_code = compiler.compile();
-            Files.write(Path.of(path.getFileName() + ".cpp"), cpp_code.getBytes());
-
+            for(String file_path : args)
+            {
+                Path path = Path.of(file_path);
+    
+                byte[] file = Files.readAllBytes(path);
+    
+                files.put(next_file_id++, file);
+                int file_id = files.size() - 1;
+    
+                Lexer lexer = new Lexer(file_id, file);
+                List<Token> tokens = lexer.lex_file();
+                //Lexer.dump_tokens(tokens);
+    
+                Parser parser = new Parser(file_id, tokens);
+                ParsedFile parsedFile = parser.parse_file();
+    
+                Compiler compiler = new Compiler(parsedFile);
+                String cpp_code = compiler.compile();
+                Files.write(Path.of(path.getFileName() + ".cpp"), cpp_code.getBytes());
+    
+            }
+        }
+        catch(IOException e)
+        {
+            System.err.println("IO Error: " + e.toString());
+        }
+        catch(LexerException e)
+        {
+            if(is_debug())
+            {
+                e.printStackTrace();
+            }
+            display_error_body(e.getMessage(), e.span);
+        }
+        catch(ParserException e)
+        {
+            if(is_debug())
+            {
+                e.printStackTrace();
+            }
+            display_error_body(e.getMessage(), e.span);
         }
     }
 
-    private static void display_error(Error error)
+    /**
+     * This functions checks if debugging is enabled by simply
+     * checking the fact that assertions are enabled using the `-ea` JVM flag
+     * @return is debugging enabled
+     */
+    public static boolean is_debug()
     {
-        System.out.printf("Error: %s\n", error.text);
-        System.out.println("-----");
+        try
+        {
+            assert false;
+        }
+        catch (AssertionError e)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private static void display_error_body(String message, Span span)
+    {
+        System.err.printf("Error: %s\n", message);
+        System.err.println("-----");
 
         int index = 0;
 
-        while (index <= files.get(error.span.file_id).length)
+        while (index <= files.get(span.file_id).length)
         {
             char c;
-            if (index < files.get(error.span.file_id).length)
+            if (index < files.get(span.file_id).length)
             {
-                c = (char) files.get(error.span.file_id)[index];
+                c = (char) files.get(span.file_id)[index];
             }
             else
             {
                 c = ' ';
             }
 
-            if ((index >= error.span.start && index < error.span.end) || (error.span.start == error.span.end && index == error.span.start))
+            if ((index >= span.start && index < span.end) || (span.start == span.end && index == span.start))
             {
-                System.out.printf("\033[1;31m%c", c);
+                System.err.printf("\033[1;31m%c", c);
             }
             else
             {
-                System.out.printf("\033[1;0m%c", c);
+                System.err.printf("\033[1;0m%c", c);
             }
             index += 1;
         }
-        System.out.println();
-        System.out.println("-----");
+        System.err.println();
+        System.err.println("-----");
 
         System.exit(1);
     }
