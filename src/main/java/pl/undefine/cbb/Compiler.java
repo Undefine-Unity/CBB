@@ -14,7 +14,7 @@ public class Compiler
     {
         StringBuilder output = new StringBuilder();
 
-        output.append("#include \"runtime/lib.h\"\n");
+        output.append("#include <runtime/lib.h>\n");
         output.append("\n");
 
         for (Declaration declaration : parsed_file.declarations)
@@ -104,21 +104,26 @@ public class Compiler
         {
             if (call.name.equals("print"))
             {
-                output.append("printf");
+                output.append("std::cout");
+
+                for (Expression param : call.params)
+                {
+                    output.append(" << ");
+                    output.append(compile_expression(param));
+                }
             }
             else
             {
                 output.append(call.name);
+                output.append('(');
+
+                for (Expression param : call.params)
+                {
+                    output.append(compile_expression(param));
+                }
+
+                output.append(')');
             }
-
-            output.append('(');
-
-            for (Expression param : call.params)
-            {
-                output.append(compile_expression(param));
-            }
-
-            output.append(')');
         }
         else if (expression instanceof StringLiteral string)
         {

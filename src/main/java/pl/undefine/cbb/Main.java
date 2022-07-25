@@ -39,8 +39,7 @@ public class Main
     
                 Compiler compiler = new Compiler(parsedFile);
                 String cpp_code = compiler.compile();
-                Files.write(Path.of(path.getFileName() + ".cpp"), cpp_code.getBytes());
-    
+                Files.write(Path.of(path + ".cpp"), cpp_code.getBytes());
             }
         }
         catch(IOException e)
