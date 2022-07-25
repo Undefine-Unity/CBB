@@ -17,5 +17,9 @@ public enum TokenType
     Semicolon,
     Comma,
     Equals,
+    Plus,
+    Minus,
+    Asterisk,
+    ForwardSlash,
     Eof,
 }

@@ -5,7 +5,7 @@ import pl.undefine.cbb.Span;
 /**
  * Exception thrown only by the parser
  */
-public class ParserException extends RuntimeException
+public class ParserException extends Exception
 {
     public Span span;
 

@@ -5,7 +5,7 @@ import pl.undefine.cbb.Span;
 /**
  * Exception thrown only by the lexer
  */
-public class LexerException extends RuntimeException
+public class LexerException extends Exception
 {
     public Span span;
 

@@ -60,6 +60,27 @@ public class Lexer
                 tokens.add(new Token(TokenType.Equals, new Span(file_id, index, index + 1)));
                 index++;
             }
+            else if (file_content[index] == '+')
+            {
+                tokens.add(new Token(TokenType.Plus, new Span(file_id, index, index + 1)));
+                index++;
+            }
+            else if (file_content[index] == '-')
+            {
+                tokens.add(new Token(TokenType.Minus, new Span(file_id, index, index + 1)));
+                index++;
+            }
+
+            else if (file_content[index] == '*')
+            {
+                tokens.add(new Token(TokenType.Asterisk, new Span(file_id, index, index + 1)));
+                index++;
+            }
+            else if (file_content[index] == '/')
+            {
+                tokens.add(new Token(TokenType.ForwardSlash, new Span(file_id, index, index + 1)));
+                index++;
+            }
             else
             {
                 tokens.add(lex_item());
@@ -127,6 +148,11 @@ public class Lexer
             while (index < file_content.length && (Character.isAlphabetic(file_content[index]) || Character.isDigit(file_content[index]) || file_content[index] == '_'))
             {
                 index++;
+            }
+
+            if(start == index)
+            {
+                throw new LexerException("unknown character", new Span(file_id, start, index + 1));
             }
 
             byte[] name = Arrays.copyOfRange(file_content, start, index);

@@ -1,9 +1,9 @@
 void hello()
 {
-    print("Hello!\n")
+    print("Hello!\n");
 }
 
 int32 main()
 {
-    hello()
+    hello();
 }

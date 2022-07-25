@@ -1,6 +1,7 @@
 package pl.undefine.cbb;
 
 import pl.undefine.cbb.ast.ParsedFile;
+import pl.undefine.cbb.utils.InternalException;
 import pl.undefine.cbb.utils.LexerException;
 import pl.undefine.cbb.utils.ParserException;
 
@@ -45,6 +46,14 @@ public class Main
         catch(IOException e)
         {
             System.err.println("IO Error: " + e.toString());
+        }
+        catch(InternalException e)
+        {
+            if(is_debug())
+            {
+                e.printStackTrace();
+            }
+            System.err.println("Compiler Internal Error (" + e.toString() + ")");
         }
         catch(LexerException e)
         {

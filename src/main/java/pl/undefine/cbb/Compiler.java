@@ -134,6 +134,21 @@ public class Compiler
         {
             output.append(variable_value.variable_name);
         }
+        else if (expression instanceof BinaryOperation binary_operation)
+        {
+            output.append(compile_expression(binary_operation.left_side));
+            output.append(compile_expression(binary_operation.operator));
+            output.append(compile_expression(binary_operation.right_side));
+        }
+        else if (expression instanceof Operator operator)
+        {
+            output.append(switch(operator.type) {
+                case Add -> "+";
+                case Subtract -> "-";
+                case Multiply -> "*";
+                case Divide -> "/";
+            });
+        }
 
         return output.toString();
     }
