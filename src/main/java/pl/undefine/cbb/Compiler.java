@@ -1,16 +1,19 @@
 package pl.undefine.cbb;
 
-import pl.undefine.cbb.ast.*;
 import pl.undefine.cbb.ast.Number;
+import pl.undefine.cbb.ast.*;
+import pl.undefine.cbb.utils.InternalException;
 
 public class Compiler
 {
+    ParsedFile parsed_file;
+
     public Compiler(ParsedFile parsed_file)
     {
         this.parsed_file = parsed_file;
     }
 
-    String compile()
+    String compile() throws InternalException
     {
         StringBuilder output = new StringBuilder();
 
@@ -26,7 +29,7 @@ public class Compiler
         return output.toString();
     }
 
-    String compile_declaration(Declaration declaration)
+    String compile_declaration(Declaration declaration) throws InternalException
     {
         if (declaration instanceof Function function)
             return compile_function(function);
@@ -34,16 +37,11 @@ public class Compiler
             return compile_variable(variable);
         else
         {
-            if(Main.is_debug())
-                assert false;
-            else
-                System.out.println("Internal error");
-            System.exit(2);
-            return "";
+            throw new InternalException("Unknown type of a declaration");
         }
     }
 
-    String compile_function(Function function)
+    String compile_function(Function function) throws InternalException
     {
         return function.return_type.cpp_name +
                 " " +
@@ -52,7 +50,7 @@ public class Compiler
                 compile_block(function.block);
     }
 
-    String compile_variable(Variable variable)
+    String compile_variable(Variable variable) throws InternalException
     {
         return variable.type.cpp_name +
                 " " +
@@ -61,7 +59,7 @@ public class Compiler
                 ";\n";
     }
 
-    String compile_block(Block block)
+    String compile_block(Block block) throws InternalException
     {
         StringBuilder output = new StringBuilder();
 
@@ -79,24 +77,21 @@ public class Compiler
         return output.toString();
     }
 
-    String compile_statement(Statement statement)
+    String compile_statement(Statement statement) throws InternalException
     {
-        if(statement instanceof Declaration declaration)
+        if (statement instanceof Declaration declaration)
             return compile_declaration(declaration);
-        else if(statement instanceof Expression expression)
+        else if (statement instanceof Expression expression)
             return compile_expression(expression);
+        else if (statement instanceof IfStatement if_statement)
+            return compile_if_statement(if_statement);
         else
         {
-            if(Main.is_debug())
-                assert false;
-            else
-                System.out.println("Internal error");
-            System.exit(2);
-            return "";
+            throw new InternalException("Unknown statement");
         }
     }
 
-    String compile_expression(Expression expression)
+    String compile_expression(Expression expression) throws InternalException
     {
         StringBuilder output = new StringBuilder();
 
@@ -147,16 +142,37 @@ public class Compiler
         }
         else if (expression instanceof Operator operator)
         {
-            output.append(switch(operator.type) {
-                case Add -> "+";
-                case Subtract -> "-";
-                case Multiply -> "*";
-                case Divide -> "/";
-            });
+            output.append(switch (operator.type)
+                    {
+                        case Add -> "+";
+                        case Subtract -> "-";
+                        case Multiply -> "*";
+                        case Divide -> "/";
+                        case Comparison -> "==";
+                        case GreaterThan -> ">";
+                        case LessThan -> "<";
+                        case GreaterThanOrEqual -> ">=";
+                        case LessThanOrEqual -> "<=";
+                        default -> throw new InternalException("Unknown operator");
+                    });
         }
 
         return output.toString();
     }
 
-    ParsedFile parsed_file;
+    public String compile_if_statement(IfStatement if_statement) throws InternalException
+    {
+        String output = "";
+        output += "if";
+        output += "(";
+        output += compile_expression(if_statement.condition);
+        output += ")\n";
+        output += compile_block(if_statement.block);
+        if (if_statement.else_block != null)
+        {
+            output += "else\n";
+            output += compile_block(if_statement.else_block);
+        }
+        return output;
+    }
 }

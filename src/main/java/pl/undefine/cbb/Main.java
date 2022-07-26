@@ -45,6 +45,7 @@ public class Main
         catch(IOException e)
         {
             System.err.println("IO Error: " + e.toString());
+            System.exit(3);
         }
         catch(InternalException e)
         {
@@ -53,6 +54,7 @@ public class Main
                 e.printStackTrace();
             }
             System.err.println("Compiler Internal Error (" + e.toString() + ")");
+            System.exit(2);
         }
         catch(LexerException e)
         {

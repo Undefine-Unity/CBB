@@ -138,6 +138,8 @@ public class Parser
     {
         if (Type.is_type(current()))
             return parse_declaration();
+        else if (current().type == TokenType.Name && current().value.equals("if"))
+            return parse_if_statement();
         else
             return parse_expression();
     }
@@ -242,8 +244,29 @@ public class Parser
             case Minus -> new Operator(OperatorType.Subtract);
             case Asterisk -> new Operator(OperatorType.Multiply);
             case ForwardSlash -> new Operator(OperatorType.Divide);
+            case DoubleEquals -> new Operator(OperatorType.Comparison);
+            case GreaterThan -> new Operator(OperatorType.GreaterThan);
+            case LessThan -> new Operator(OperatorType.LessThan);
+            case GreaterThanOrEqual -> new Operator(OperatorType.GreaterThanOrEqual);
+            case LessThanOrEqual -> new Operator(OperatorType.LessThanOrEqual);
             default -> null;
         };
+    }
+
+    IfStatement parse_if_statement() throws ParserException, InternalException
+    {
+        IfStatement if_statement = new IfStatement();
+        index++; // Skip `if` token
+        expect(TokenType.LParen);
+        if_statement.condition = parse_expression();
+        expect(TokenType.RParen);
+        if_statement.block = parse_block();
+        if(current().type == TokenType.Name && current().value.equals("else"))
+        {
+            index++; // Skip `else`
+            if_statement.else_block = parse_block();
+        }
+        return if_statement;
     }
 
     Call parse_call() throws ParserException, InternalException
@@ -251,14 +274,8 @@ public class Parser
         Call call = new Call();
         if (current().type == TokenType.Name)
         {
-            call.name = current().value;
-            index++;
-            if (index >= tokens.size() || current().type != TokenType.LParen)
-            {
-                index++;
-                throw new ParserException("expected '('", current().span);
-            }
-            index++;
+            call.name = get_value_and_advance();
+            expect(TokenType.LParen);
             while (index < tokens.size())
             {
                 if (current().type == TokenType.RParen)

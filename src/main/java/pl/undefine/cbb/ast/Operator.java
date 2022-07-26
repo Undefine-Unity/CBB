@@ -14,8 +14,9 @@ public class Operator extends Expression
     public int get_precedence() throws InternalException
     {
         return switch(type) {
-            case Add, Subtract -> 95;
-            case Multiply, Divide -> 90;
+            case Multiply, Divide -> 100;
+            case Add, Subtract -> 75;
+            case Comparison, GreaterThan, LessThan, GreaterThanOrEqual, LessThanOrEqual -> 50;
             default -> throw new InternalException("unknown operator type");
         };
     }

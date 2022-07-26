@@ -57,7 +57,41 @@ public class Lexer
             }
             else if (file_content[index] == '=')
             {
-                tokens.add(new Token(TokenType.Equals, new Span(file_id, index, index + 1)));
+                if(file_content[index + 1] == '=')
+                {
+                    tokens.add(new Token(TokenType.DoubleEquals, new Span(file_id, index, index + 1)));
+                    index++;
+                }
+                else
+                {
+                    tokens.add(new Token(TokenType.Equals, new Span(file_id, index, index + 1)));
+                }
+                index++;
+            }
+            else if (file_content[index] == '>')
+            {
+                if(file_content[index + 1] == '=')
+                {
+                    tokens.add(new Token(TokenType.GreaterThanOrEqual, new Span(file_id, index, index + 1)));
+                    index++;
+                }
+                else
+                {
+                    tokens.add(new Token(TokenType.GreaterThan, new Span(file_id, index, index + 1)));
+                }
+                index++;
+            }
+            else if (file_content[index] == '<')
+            {
+                if(file_content[index + 1] == '=')
+                {
+                    tokens.add(new Token(TokenType.LessThanOrEqual, new Span(file_id, index, index + 1)));
+                    index++;
+                }
+                else
+                {
+                    tokens.add(new Token(TokenType.LessThan, new Span(file_id, index, index + 1)));
+                }
                 index++;
             }
             else if (file_content[index] == '+')

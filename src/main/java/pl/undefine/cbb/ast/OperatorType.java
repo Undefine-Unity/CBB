@@ -5,5 +5,10 @@ public enum OperatorType
     Add,
     Subtract,
     Multiply,
-    Divide
+    Divide,
+    Comparison,
+    GreaterThan,
+    LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual
 }

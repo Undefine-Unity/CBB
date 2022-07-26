@@ -1,0 +1,12 @@
+int32 main()
+{
+    uint8 test = 0;
+    if (test == 0)
+    {
+        print("It works!");
+    }
+    else
+    {
+        print("Something's wrong...");
+    }
+}
