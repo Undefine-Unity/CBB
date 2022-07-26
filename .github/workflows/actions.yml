@@ -1,0 +1,18 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+jobs:
+  builds:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y clang openjdk-17-jdk
+      - name: run tests
+        run: |
+          java src/test/java/pl/undefine/cbb/tests/Test.java test
+
