@@ -1,5 +1,7 @@
 int32 main()
 {
     print(1 + 2 - 1 * 5 / 2);
+    print("\n");
     print(2 * 8 - 5 / 2);
+    print("\n");
 }

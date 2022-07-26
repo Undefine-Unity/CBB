@@ -102,6 +102,11 @@ public class Parser
             index++;
             variable.asignment = parse_expression();
         }
+        // We ignore the semicolon for now, I think later they should be a requirement
+        if(current().type == TokenType.Semicolon)
+        {
+            index++;
+        }
         return variable;
     }
 
