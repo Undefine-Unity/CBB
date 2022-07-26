@@ -149,7 +149,7 @@ public class Test
             if (compiler_process.exitValue() == 0)
             {
                 System.out.println("[CMD] clang++ -std=c++2a " + file_path + ".cpp" + " -o " + executable_path);
-                Process clang_process = new ProcessBuilder("clang++", "-std=c++2a", "-I.", file_path + ".cpp", "-o", executable_path).start();
+                Process clang_process = new ProcessBuilder("clang++", "-std=c++2a", "-I.", "-Wno-writable-strings", file_path + ".cpp", "-o", executable_path).start();
                 clang_process.waitFor();
                 if (clang_process.exitValue() == 0)
                 {
@@ -160,6 +160,10 @@ public class Test
                         if (process.getInputStream().available() > 0)
                             output.append(new String(process.getInputStream().readAllBytes()));
                     }
+                }
+                else
+                {
+                    System.out.println("[ERROR] Failed to compile " + file_path);
                 }
             }
         }

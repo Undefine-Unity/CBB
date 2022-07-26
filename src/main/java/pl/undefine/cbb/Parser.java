@@ -77,37 +77,63 @@ public class Parser
         }
     }
 
-    Function parse_function() throws ParserException, InternalException
+    FunctionDeclaration parse_function() throws ParserException, InternalException
     {
-        Function function = new Function();
+        FunctionDeclaration function_declaration = new FunctionDeclaration();
         // We do not do any checks because everything is checked in `parse_declaration`
-        function.return_type = Type.get_type(get_value_and_advance());
-        function.name = get_value_and_advance();
+        function_declaration.return_type = Type.get_type(get_value_and_advance());
+        function_declaration.name = get_value_and_advance();
         // Skip parentheses for now
         expect(TokenType.LParen);
-        expect(TokenType.RParen);
-        function.block = parse_block();
-        return function;
+        while(index < tokens.size())
+        {
+            if(current().type == TokenType.RParen)
+            {
+                index++;
+                break;
+            }
+            else if(current().type == TokenType.Name && Type.is_type(current()))
+            {
+                VariableDeclaration parameter_declaration = new VariableDeclaration();
+                parameter_declaration.type = Type.get_type(get_value_and_advance());
+                if(current().type != TokenType.Name)
+                    throw new ParserException("invalid function parameter", current().span);
+
+                parameter_declaration.name = get_value_and_advance();
+
+                if(current().type != TokenType.RParen)
+                {
+                    expect(TokenType.Comma);
+                }
+                function_declaration.parameters.add(parameter_declaration);
+            }
+            else
+            {
+                throw new ParserException("unexpected token", current().span);
+            }
+        }
+        function_declaration.block = parse_block();
+        return function_declaration;
     }
 
-    Variable parse_variable() throws ParserException, InternalException
+    VariableDeclaration parse_variable() throws ParserException, InternalException
     {
-        Variable variable = new Variable();
+        VariableDeclaration variable_declaration = new VariableDeclaration();
         // We do not do any checks because everything is checked in `parse_declaration`
-        variable.type = Type.get_type(get_value_and_advance());
-        variable.name = get_value_and_advance();
+        variable_declaration.type = Type.get_type(get_value_and_advance());
+        variable_declaration.name = get_value_and_advance();
         // This variable is assigned during declaration
         if (current().type == TokenType.Equals)
         {
             index++;
-            variable.asignment = parse_expression();
+            variable_declaration.asignment = parse_expression();
         }
         // We ignore the semicolon for now, I think later they should be a requirement
         if(current().type == TokenType.Semicolon)
         {
             index++;
         }
-        return variable;
+        return variable_declaration;
     }
 
     Block parse_block() throws ParserException, InternalException

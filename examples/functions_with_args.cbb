@@ -1,0 +1,10 @@
+void println(string text)
+{
+    print(text);
+    print("\n");
+}
+
+int32 main()
+{
+    println("Hello!");
+}

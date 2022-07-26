@@ -1,6 +1,6 @@
 package pl.undefine.cbb.ast;
 
-public class Variable extends Declaration
+public class VariableDeclaration extends Declaration
 {
     public String name;
     public Type type;

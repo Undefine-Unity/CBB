@@ -31,32 +31,38 @@ public class Compiler
 
     String compile_declaration(Declaration declaration) throws InternalException
     {
-        if (declaration instanceof Function function)
-            return compile_function(function);
-        else if (declaration instanceof Variable variable)
-            return compile_variable(variable);
+        if (declaration instanceof FunctionDeclaration function_declaration)
+            return compile_function(function_declaration);
+        else if (declaration instanceof VariableDeclaration variable_declaration)
+            return compile_variable(variable_declaration) + ";\n";
         else
         {
             throw new InternalException("Unknown type of a declaration");
         }
     }
 
-    String compile_function(Function function) throws InternalException
+    String compile_function(FunctionDeclaration function_declaration) throws InternalException
     {
-        return function.return_type.cpp_name +
-                " " +
-                function.name +
-                "()\n" +
-                compile_block(function.block);
+        StringBuilder output = new StringBuilder();
+        output.append(function_declaration.return_type.cpp_name);
+        output.append(" ");
+        output.append(function_declaration.name);
+        output.append("(");
+        for (VariableDeclaration parameter : function_declaration.parameters)
+        {
+            output.append(compile_variable(parameter));
+        }
+        output.append(")\n");
+        output.append(compile_block(function_declaration.block));
+        return output.toString();
     }
 
-    String compile_variable(Variable variable) throws InternalException
+    String compile_variable(VariableDeclaration variable_declaration) throws InternalException
     {
-        return variable.type.cpp_name +
+        return variable_declaration.type.cpp_name +
                 " " +
-                variable.name +
-                (variable.asignment != null ? " = " + compile_expression(variable.asignment) : "") +
-                ";\n";
+                variable_declaration.name +
+                (variable_declaration.asignment != null ? " = " + compile_expression(variable_declaration.asignment) : "");
     }
 
     String compile_block(Block block) throws InternalException
