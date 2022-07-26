@@ -39,3 +39,4 @@ build/
 ### CBB Compiler Temp ###
 *.cpp
 a.out
+out/

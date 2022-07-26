@@ -56,6 +56,15 @@ public class Test
             {
                 System.out.println("    " + test);
             }
+
+            if (failed == 0)
+            {
+                System.exit(0);
+            }
+            else
+            {
+                System.exit(1);
+            }
         }
         else
         {

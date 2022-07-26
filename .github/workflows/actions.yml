@@ -4,15 +4,24 @@ on:
   push:
     branches: [ master ]
 jobs:
-  builds:
+  tests-linux:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - name: install dependencies
         run: |
           sudo apt update
-          sudo apt install -y clang openjdk-17-jdk
+          sudo apt install -y clang
+      - name: build the compiler
+        run: |
+          javac -source 17 -target 17 -d out $(find src/main/java/pl/undefine/cbb/ -type f -name '*.java')
+          mkdir out/META-INF
+          printf "Manifest-Version: 1.0\nMain-Class: pl.undefine.cbb.Main\n" > out/META-INF/MANIFEST.MF
+          jar --create --file CBB.jar --manifest out/META-INF/MANIFEST.MF -C out/ .
       - name: run tests
         run: |
           java src/test/java/pl/undefine/cbb/tests/Test.java test
-
