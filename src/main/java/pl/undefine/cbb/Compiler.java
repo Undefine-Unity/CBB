@@ -91,10 +91,10 @@ public class Compiler
             return compile_expression(expression);
         else if (statement instanceof IfStatement if_statement)
             return compile_if_statement(if_statement);
+        else if (statement instanceof ReturnStatement return_statement)
+            return "return " + compile_expression(return_statement.value) + ";\n";
         else
-        {
             throw new InternalException("Unknown statement");
-        }
     }
 
     String compile_expression(Expression expression) throws InternalException
@@ -107,7 +107,7 @@ public class Compiler
             {
                 output.append("std::cout");
 
-                for (Expression param : call.params)
+                for (Expression param : call.parameters)
                 {
                     output.append(" << ");
                     output.append(compile_expression(param));
@@ -118,7 +118,7 @@ public class Compiler
                 output.append(call.name);
                 output.append('(');
 
-                for (Expression param : call.params)
+                for (Expression param : call.parameters)
                 {
                     output.append(compile_expression(param));
                 }

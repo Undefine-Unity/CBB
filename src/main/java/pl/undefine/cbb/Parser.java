@@ -166,6 +166,14 @@ public class Parser
             return parse_declaration();
         else if (current().type == TokenType.Name && current().value.equals("if"))
             return parse_if_statement();
+        else if (current().type == TokenType.Name && current().value.equals("return"))
+        {
+            index++;
+            ReturnStatement return_statement = new ReturnStatement();
+            return_statement.value = parse_expression();
+            expect(TokenType.Semicolon);
+            return return_statement;
+        }
         else
             return parse_expression();
     }
@@ -311,7 +319,7 @@ public class Parser
                 }
                 else
                 {
-                    call.params.add(parse_expression());
+                    call.parameters.add(parse_expression());
                 }
             }
             throw new ParserException("expected ')'", tokens.get(index - 1).span);

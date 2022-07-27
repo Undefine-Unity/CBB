@@ -29,7 +29,8 @@ public enum Type
 
     public static boolean is_type(Token token)
     {
-        assert token.type == TokenType.Name;
+        if(token.type != TokenType.Name)
+            return false;
 
         for(Type type : values())
         {
@@ -44,7 +45,8 @@ public enum Type
 
     public static Type get_type(Token token)
     {
-        assert token.type == TokenType.Name;
+        if(token.type != TokenType.Name)
+            return null;
 
         for(Type type : values())
         {

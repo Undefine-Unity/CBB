@@ -1,0 +1,9 @@
+string get_text()
+{
+    return "Hello from `get_text`!\n";
+}
+
+int32 main()
+{
+    print(get_text());
+}

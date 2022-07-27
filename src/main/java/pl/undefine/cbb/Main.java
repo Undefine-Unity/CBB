@@ -21,52 +21,53 @@ public class Main
     {
         try
         {
-            for(String file_path : args)
+            for (String file_path : args)
             {
                 Path path = Path.of(file_path);
-    
+
                 byte[] file = Files.readAllBytes(path);
-    
+
                 files.put(next_file_id++, file);
                 int file_id = files.size() - 1;
-    
+
                 Lexer lexer = new Lexer(file_id, file);
                 List<Token> tokens = lexer.lex_file();
                 //Lexer.dump_tokens(tokens);
-    
+
                 Parser parser = new Parser(file_id, tokens);
-                ParsedFile parsedFile = parser.parse_file();
-    
-                Compiler compiler = new Compiler(parsedFile);
+                ParsedFile parsed_file = parser.parse_file();
+                //ASTDumper.dump(parsed_file);
+
+                Compiler compiler = new Compiler(parsed_file);
                 String cpp_code = compiler.compile();
                 Files.write(Path.of(path + ".cpp"), cpp_code.getBytes());
             }
         }
-        catch(IOException e)
+        catch (IOException e)
         {
-            System.err.println("IO Error: " + e.toString());
+            System.err.println("IO Error: " + e);
             System.exit(3);
         }
-        catch(InternalException e)
+        catch (InternalException e)
         {
-            if(is_debug())
+            if (is_debug())
             {
                 e.printStackTrace();
             }
-            System.err.println("Compiler Internal Error (" + e.toString() + ")");
+            System.err.println("Compiler internal error");
             System.exit(2);
         }
-        catch(LexerException e)
+        catch (LexerException e)
         {
-            if(is_debug())
+            if (is_debug())
             {
                 e.printStackTrace();
             }
             display_error_body(e.getMessage(), e.span);
         }
-        catch(ParserException e)
+        catch (ParserException e)
         {
-            if(is_debug())
+            if (is_debug())
             {
                 e.printStackTrace();
             }
@@ -77,6 +78,7 @@ public class Main
     /**
      * This functions checks if debugging is enabled by simply
      * checking the fact that assertions are enabled using the `-ea` JVM flag
+     *
      * @return is debugging enabled
      */
     public static boolean is_debug()

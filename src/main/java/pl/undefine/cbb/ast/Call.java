@@ -6,10 +6,10 @@ import java.util.List;
 public class Call extends Expression
 {
     public String name;
-    public List<Expression> params;
+    public List<Expression> parameters;
 
     public Call()
     {
-        params = new ArrayList<>();
+        parameters = new ArrayList<>();
     }
 }
